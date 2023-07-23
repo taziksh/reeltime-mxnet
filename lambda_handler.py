@@ -46,8 +46,8 @@ def load_model(s_fname, p_fname):
 
 
 # sym, arg_params, aux_params = load_model('model2.json', 'model2.params')
-sym_file = read_s3_file('reeltimes3', 'Inception-7-symbol.json')
-params_file = read_s3_file('reeltimes3', 'Inception-7-0001.params')
+sym_file = read_s3_file('reeltimes3', 'model/Inception-7-symbol.json')
+params_file = read_s3_file('reeltimes3', 'model/Inception-7-0001.params')
 sym, arg_params, aux_params = gluon.nn.SymbolBlock.imports(sym_file, ['data'], params_file)
 
 
