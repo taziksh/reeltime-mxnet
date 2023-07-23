@@ -10,18 +10,7 @@ region = 'us-east-1'
 relevant_timestamps = []
 
 import mxnet as mx
-
-from mxnet import gluon
-
-def read_s3_file(bucketname, filename):
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucketname)
-    obj = bucket.Object(filename)
-    tmp = tempfile.NamedTemporaryFile()
-    with open(tmp.name, 'wb') as f:
-        obj.download_fileobj(f)
-    return tmp.name
-
+#from mxnet import gluon
 
 def load_model(s_fname, p_fname):
     """
@@ -32,6 +21,9 @@ def load_model(s_fname, p_fname):
     aux_params : dict of str to NDArray
         Model parameter, dict of name to NDArray of net's auxiliary states.
     """
+    s3 = boto3.client('s3')
+    s3.download_file('reeltimes3', 'model/Inception-7-symbol.json', s_fname)
+    s3.download_file('reeltimes3', 'model/Inception-7-0001.params', p_fname)
     symbol = mx.symbol.load(s_fname)
     save_dict = mx.nd.load(p_fname)
     arg_params = {}
@@ -45,10 +37,10 @@ def load_model(s_fname, p_fname):
     return symbol, arg_params, aux_params
 
 
-# sym, arg_params, aux_params = load_model('model2.json', 'model2.params')
-sym_file = read_s3_file('reeltimes3', 'model/Inception-7-symbol.json')
-params_file = read_s3_file('reeltimes3', 'model/Inception-7-0001.params')
-sym, arg_params, aux_params = gluon.nn.SymbolBlock.imports(sym_file, ['data'], params_file)
+sym, arg_params, aux_params = load_model('/tmp/model.json', '/tmp/model.params')
+#sym_file = read_s3_file('reeltimes3', 'model/Inception-7-symbol.json')
+#params_file = read_s3_file('reeltimes3', 'model/Inception-7-0001.params')
+#sym, arg_params, aux_params = gluon.nn.SymbolBlock.imports(sym_file, ['data'], params_file)
 
 
 # load json and params into model
@@ -80,7 +72,7 @@ def lambda_handler(event, context):
 
     # Get image(s) from s3
     s3 = boto3.resource('s3')
-    bucket = s3.Bucket(event['reeltimes3'])
+    bucket = s3.Bucket(event['bucketname'])
     object = bucket.Object(event['filename'])
 
     # img = mx.image.imread('image.jpg')
